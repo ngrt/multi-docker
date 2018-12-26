@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t noufgo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run noufgo/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t noufgo/multi-client ./client
+  - docker build -t noufgo/multi-nginx ./nginx
+  - docker build -t noufgo/multi-server ./server
+  - docker build -t noufgo/multi-worker ./worker
+  # Log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" echo --password-stdin
+  # Take thos images and push them to docker hub
+  - docker push noufgo/multi-client
+  - docker push noufgo/multi-nginx
+  - docker push noufgo/multi-server
+  - docker push noufgo/multi-worker
